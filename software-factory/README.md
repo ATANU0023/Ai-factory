@@ -46,8 +46,8 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/ai-software-factory.git
-cd ai-software-factory
+git clone https://github.com/ATANU0023/Ai-factory.git
+cd software-factory
 
 # Install dependencies
 pip install -r requirements.txt
@@ -66,7 +66,7 @@ cp .env.example .env
 cd C:\Users\YourName\Projects\my-web-app
 
 # Launch AI Factory
-python path/to/ai-software-factory/ai-factory.py
+python path/to/software-factory/ai-factory.py
 
 💬 You: /pwd
 📂 Current directory: C:\Users\YourName\Projects\my-web-app
@@ -384,8 +384,8 @@ Built with:
 
 ## 📧 Support
 
-- **Issues**: [GitHub Issues](https://github.com/YOUR_USERNAME/ai-software-factory/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/YOUR_USERNAME/ai-software-factory/discussions)
+- **Issues**: [GitHub Issues](https://github.com/ATANU0023/Ai-factory/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/ATANU0023/ai-factory/discussions)
 - **Email**: your-atanupramanik506@gmail.com
 ---
 
