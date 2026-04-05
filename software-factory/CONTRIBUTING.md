@@ -16,8 +16,8 @@ Thank you for your interest in contributing! This document provides guidelines f
 
 ```bash
 # Fork the repository on GitHub, then:
-git clone https://github.com/YOUR_USERNAME/ai-software-factory.git
-cd ai-software-factory
+git clone https://github.com/ATANU0023/Ai-factory.git
+cd software-factory
 ```
 
 ### 2. Set Up Development Environment
@@ -236,8 +236,8 @@ Mockups, examples, or references
 
 ## ❓ Questions?
 
-- Open a [GitHub Discussion](https://github.com/YOUR_USERNAME/ai-software-factory/discussions)
-- Email: your-email@example.com
+- Open a [GitHub Discussion](https://github.com/ATANU0023/Ai-factory/discussions)
+- Email: atanupramanik506@gmail.com
 
 ---
 
