@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.11.3
+    container_name: software-factory-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      - QDRANT__SERVICE__GRPC_PORT=6334
+    networks:
+      - software-factory-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  software-factory:
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    container_name: software-factory-app
+    depends_on:
+      qdrant:
+        condition: service_healthy
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./output:/app/output
+    networks:
+      - software-factory-network
+    restart: unless-stopped
+
+volumes:
+  qdrant_data:
+    driver: local
+
+networks:
+  software-factory-network:
+    driver: bridge
