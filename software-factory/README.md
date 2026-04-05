@@ -386,8 +386,7 @@ Built with:
 
 - **Issues**: [GitHub Issues](https://github.com/YOUR_USERNAME/ai-software-factory/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/YOUR_USERNAME/ai-software-factory/discussions)
-- **Email**: your-email@example.com
-
+- **Email**: your-atanupramanik506@gmail.com
 ---
 
 ## 🌟 Star History
@@ -396,4 +395,4 @@ If you find this project useful, please consider giving it a ⭐ star on GitHub!
 
 ---
 
-**Made with ❤️ by the AI Software Factory Team**
+**Made with ❤️ by ATANU PRAMANIK**
