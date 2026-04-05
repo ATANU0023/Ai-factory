@@ -386,7 +386,7 @@ Built with:
 
 - **Issues**: [GitHub Issues](https://github.com/ATANU0023/Ai-factory/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/ATANU0023/ai-factory/discussions)
-- **Email**: your-atanupramanik506@gmail.com
+- **Email**: atanupramanik506@gmail.com
 ---
 
 ## 🌟 Star History
