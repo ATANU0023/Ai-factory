@@ -18,6 +18,19 @@ class CorrelationIdFilter(logging.Filter):
         return True
 
 
+class HumanReadableFormatter(logging.Formatter):
+    """Format logs in human-readable format for interactive mode."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        # Only show WARNING and ERROR in interactive mode
+        if record.levelno >= logging.WARNING:
+            timestamp = datetime.now(timezone.utc).strftime("%H:%M:%S")
+            level = record.levelname
+            message = record.getMessage()
+            return f"[{timestamp}] {level}: {message}"
+        return ""  # Suppress INFO and DEBUG in interactive mode
+
+
 class StructuredFormatter(logging.Formatter):
     """Format logs as structured JSON."""
 
@@ -47,8 +60,13 @@ class StructuredFormatter(logging.Formatter):
         return json.dumps(log_data)
 
 
-def get_logger(name: str) -> logging.Logger:
-    """Get a configured logger with structured JSON output."""
+def get_logger(name: str, interactive: bool = False) -> logging.Logger:
+    """Get a configured logger with structured JSON output.
+    
+    Args:
+        name: Logger name
+        interactive: If True, use human-readable format (suppress INFO logs)
+    """
     logger = logging.getLogger(name)
 
     if not logger.handlers:
@@ -56,7 +74,15 @@ def get_logger(name: str) -> logging.Logger:
 
         # Console handler
         console_handler = logging.StreamHandler()
-        console_handler.setFormatter(StructuredFormatter())
+        
+        # Use human-readable format for interactive mode
+        if interactive:
+            console_handler.setFormatter(HumanReadableFormatter())
+            # In interactive mode, only show WARNING and above
+            console_handler.setLevel(logging.WARNING)
+        else:
+            console_handler.setFormatter(StructuredFormatter())
+            
         console_handler.addFilter(CorrelationIdFilter())
         logger.addHandler(console_handler)
 
