@@ -26,21 +26,24 @@ class ArchitectAgent(BaseAgent):
             api_key=settings.openrouter_api_key,
         )
         
+        # Use configured planning model from settings
+        planning_model = settings.planning_model
+        
         response = client.chat.completions.create(
-            model="deepseek/deepseek-chat",
+            model=planning_model.model_name,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_input}
             ],
-            temperature=0.3,
-            max_tokens=8192,
+            temperature=planning_model.temperature,
+            max_tokens=planning_model.max_tokens,
         )
         
         content = response.choices[0].message.content or ""
         return {
             "response": content,
             "cache_hit": False,
-            "model": "deepseek/deepseek-chat",
+            "model": planning_model.model_name,
             "tokens": {"prompt": 0, "completion": 0},
             "cost": 0.0,
         }
@@ -105,9 +108,9 @@ Rules:
         # Casual greetings/conversation patterns
         casual_patterns = [
             "hi", "hello", "hey", "greetings", "howdy",
-            "how are you", "whats up", "what's up",
+            "how are you", "how r u", "how are u", "whats up", "what's up",
             "thank", "thanks", "bye", "goodbye",
-            "test", "testing", "help",
+            "test", "testing",
         ]
         
         # Check if it's just a greeting or casual chat
@@ -174,6 +177,24 @@ Rules:
 
         logger.info(f"Architect Agent processing: {user_input[:100]}...")
 
+        # Early validation: Check if this is actually a project request
+        if not self._is_project_request(user_input):
+            logger.info("Input is casual conversation, not a project request")
+            state["final_status"] = "success"
+            state["current_step"] = "complete"
+            state["generated_files"] = []
+            state["architect_plan"] = {
+                "project_name": "N/A",
+                "message": f"I'm here to help build software! Please describe what you'd like to create.",
+                "tech_stack": [],
+                "architecture": "N/A",
+                "services": [],
+                "database_schema": [],
+                "tasks": []
+            }
+            self._record_metrics(start_time, TokenUsage(prompt_tokens=0, completion_tokens=0, cost_usd=0.0), True)
+            return state
+
         # Build enhanced prompt with clarifications
         enhanced_input = user_input
         if clarifications:
@@ -181,7 +202,13 @@ Rules:
             for question, answer in clarifications.items():
                 enhanced_input += f"- {question}: {answer}\n"
 
-        system_prompt = """You are a Principal Software Architect. Analyze user requirements and create a detailed development plan.
+        # Add current date/time context
+        from datetime import datetime
+        current_date = datetime.now().strftime("%A, %B %d, %Y")
+        
+        system_prompt = f"""You are a Principal Software Architect. Analyze user requirements and create a detailed development plan.
+
+Current Date: {current_date}
 
 RULES:
 1. Do NOT generate implementation code
@@ -192,21 +219,21 @@ RULES:
 6. Include database schemas if needed
 
 Output format (JSON):
-{
+{{
   "project_name": "string",
   "tech_stack": ["list of technologies"],
   "architecture": "monolith|microservices|serverless",
-  "services": [{"name": "string", "description": "string", "endpoints": []}],
-  "database_schema": [{"table": "string", "columns": [{"name": "string", "type": "string"}]}],
+  "services": [{{"name": "string", "description": "string", "endpoints": []}}],
+  "database_schema": [{{"table": "string", "columns": [{{"name": "string", "type": "string"}}]}}],
   "tasks": [
-    {
+    {{
       "task_id": "unique_id",
       "description": "what to build",
       "files": ["file paths to create"],
       "dependencies": ["task_ids this depends on"]
-    }
+    }}
   ]
-}"""
+}}"""
 
         try:
             result = self.model_router.route_request(

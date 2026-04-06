@@ -8,22 +8,34 @@ from memory.semantic_cache import SemanticCache
 from tools.file_manager import FileManager
 from observability.logger import get_logger
 
-logger = get_logger(__name__)
+# Use interactive mode for cleaner output
+logger = get_logger(__name__, interactive=True)
 
 
 def _is_project_request(user_input: str) -> bool:
     """Check if input is a project request or general question."""
     text = user_input.lower().strip()
     
-    # General questions/conversation
-    question_patterns = [
-        "what can", "who are", "how do", "how does",
-        "what is", "what are", "explain", "tell me",
-        "help", "hi", "hello", "hey",
+    # Casual greetings/conversation patterns
+    casual_patterns = [
+        "hi", "hello", "hey", "greetings", "howdy",
+        "how are you", "how r u", "how are u", "whats up", "what's up",
+        "thank", "thanks", "bye", "goodbye",
+        "test", "testing",
     ]
     
-    if any(pattern in text for pattern in question_patterns):
-        return False
+    # Check if it's just a greeting or casual chat
+    if any(pattern in text for pattern in casual_patterns):
+        # But allow if it also contains project keywords
+        project_keywords = [
+            "create", "build", "make", "develop", "design",
+            "app", "application", "website", "api", "system",
+            "program", "software", "tool", "service",
+        ]
+        
+        has_project_keyword = any(keyword in text for keyword in project_keywords)
+        if not has_project_keyword:
+            return False
     
     # Project requests have action verbs
     project_verbs = ["create", "build", "make", "develop", "design", "implement"]
@@ -37,14 +49,24 @@ def _handle_conversational_query(query: str):
     try:
         from openai import OpenAI
         from config.settings import settings
+        from datetime import datetime
         
         client = OpenAI(
             base_url="https://openrouter.ai/api/v1",
             api_key=settings.openrouter_api_key,
         )
         
-        system_prompt = """You are a helpful AI Software Factory assistant. 
+        # Get current date and time for context
+        current_datetime = datetime.now()
+        current_date_str = current_datetime.strftime("%A, %B %d, %Y")
+        current_time_str = current_datetime.strftime("%I:%M %p")
+        
+        system_prompt = f"""You are a helpful AI Software Factory assistant.
 Answer questions about your capabilities concisely and friendly.
+
+Current Context:
+- Today's Date: {current_date_str}
+- Current Time: {current_time_str}
 
 Key capabilities:
 - Generate code in any programming language
@@ -54,16 +76,20 @@ Key capabilities:
 - Undo/redo changes with automatic backups
 - Ask clarifying questions for complex projects
 
-Keep responses brief and actionable."""
+Keep responses brief and actionable.
+If asked about current date/time, use the context provided above."""
 
+        # Use configured conversational model from settings
+        conv_model = settings.conversational_model
+        
         response = client.chat.completions.create(
-            model="deepseek/deepseek-chat",
+            model=conv_model.model_name,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": query}
             ],
-            temperature=0.7,
-            max_tokens=500,
+            temperature=conv_model.temperature,
+            max_tokens=conv_model.max_tokens,
         )
         
         answer = response.choices[0].message.content or ""
@@ -96,7 +122,9 @@ def print_banner():
     print("  /undo               - Undo last change")
     print("  /redo               - Redo last undone change")
     print("  /backups            - List backup files")
-    print("  /questions          - Enable/disable clarifying questions")
+    print("  /questions          - Toggle clarifying questions on/off")
+    print("  /mode <type>        - Switch mode: 'chat' or 'build'")
+    print("  /status             - Show current settings")
     print("  /help               - Show this help message")
     print("  quit/exit           - Exit the program")
     print("\nOr just describe your project and I'll build it!")
@@ -307,8 +335,10 @@ def interactive_mode():
     # Initialize components
     file_manager = FileManager("./output")
     ask_questions = True  # Default: ask clarifying questions
+    current_mode = "build"  # Default mode: 'build' or 'chat'
     
     print("\n💡 Tip: Type '/help' for available commands\n")
+    print(f"📊 Current mode: {current_mode.upper()} | Clarifying questions: {'ON' if ask_questions else 'OFF'}")
     
     while True:
         try:
@@ -358,10 +388,37 @@ def interactive_mode():
                 handle_backups_command(file_manager)
                 continue
             
+            elif prompt.lower() == '/status':
+                print(f"\n📊 Current Settings:")
+                print(f"   Mode: {current_mode.upper()}")
+                print(f"   Clarifying Questions: {'ON' if ask_questions else 'OFF'}")
+                print(f"   Working Directory: {file_manager.base_dir}")
+                print(f"\n💡 Use '/mode chat' for conversational mode")
+                print(f"💡 Use '/mode build' for project building (default)")
+                continue
+            
             elif prompt.lower() == '/questions':
                 ask_questions = not ask_questions
                 status = "enabled" if ask_questions else "disabled"
                 print(f"✅ Clarifying questions {status}")
+                print(f"📊 Current mode: {current_mode.upper()} | Clarifying questions: {'ON' if ask_questions else 'OFF'}")
+                continue
+            
+            elif prompt.startswith('/mode'):
+                # Switch between chat and build modes
+                args = prompt[5:].strip().lower()
+                if args in ['chat', 'build']:
+                    current_mode = args
+                    print(f"✅ Switched to {current_mode.upper()} mode")
+                    if current_mode == 'chat':
+                        print("💬 Chat mode: All inputs treated as questions (use /ask for projects)")
+                    else:
+                        print("🔨 Build mode: All inputs treated as project requests")
+                    print(f"📊 Current mode: {current_mode.upper()} | Clarifying questions: {'ON' if ask_questions else 'OFF'}")
+                else:
+                    print("❌ Usage: /mode <chat|build>")
+                    print("   chat - Treat all input as conversational questions")
+                    print("   build - Treat all input as project requests (default)")
                 continue
             
             elif prompt.startswith('/ask'):
@@ -376,9 +433,20 @@ def interactive_mode():
                 
                 clarifications = {}
             else:
-                # Normal project description
+                # Normal input - behavior depends on current mode
                 user_input = prompt
                 clarifications = {}
+                
+                # In chat mode, treat everything as conversational unless it has project verbs
+                if current_mode == 'chat':
+                    if not _is_project_request(user_input):
+                        _handle_conversational_query(user_input)
+                        continue
+                else:
+                    # Build mode: Early check for casual conversation
+                    if not _is_project_request(user_input):
+                        _handle_conversational_query(user_input)
+                        continue
                 
                 # Ask clarifying questions if enabled
                 if ask_questions:
