@@ -18,10 +18,12 @@
 - **Automatic backups** - Every edit is backed up automatically
 
 ### 🧠 Intelligent Assistance
-- **Smart intent detection** - Only asks questions when needed
-- **Clarifying questions** - Understands your requirements before building
+- **Smart intent detection** - Automatically distinguishes casual chat from project requests
+- **Dual mode operation** - Switch between chat mode and build mode with `/mode`
+- **Clarifying questions** - Understands your requirements before building (toggle with `/questions`)
 - **Multi-agent workflow** - Architect plans, Developer codes, Auditor tests
 - **Context-aware** - Analyzes existing codebase structure and style
+- **Clean terminal output** - Human-readable format, no verbose JSON logs
 
 ### 🛡️ Safety First
 - **Diff previews** - Review all changes before applying
@@ -118,14 +120,70 @@ python ai-factory.py
 | `/redo` | Redo undone change | `/redo` |
 | `/backups` | List backup files | `/backups` |
 | `/questions` | Toggle clarifying Q&A | `/questions` |
+| `/mode <type>` | Switch mode: chat or build | `/mode chat` |
+| `/status` | Show current settings | `/status` |
 | `/ask <prompt>` | Generate without questions | `/ask Hello world` |
 | `quit/exit` | Exit program | `quit` |
 
-**Or just describe what you want:**
+### 💬 Smart Input Modes
+
+The system intelligently detects whether you're having a conversation or requesting a project:
+
+**Casual Conversation** (automatically detected):
 ```
-💬 You: Add logging to all functions
-💬 You: Create unit tests for the API
-💬 You: Refactor database queries
+💬 You: how are u
+🤖 I'm here to help build software! What would you like to create?
+
+💬 You: what is today's date?
+🤖 Today is Monday, April 06, 2026
+
+💬 You: what can you do?
+🤖 I can generate code, modify projects, add features, fix bugs...
+```
+
+**Project Requests** (automatically detected):
+```
+💬 You: create a todo app
+🚀 Building your project...
+```
+
+### 🔄 Mode Switching
+
+Control how the system interprets your input:
+
+```bash
+# Chat Mode - All input treated as questions
+💬 You: /mode chat
+✅ Switched to CHAT mode
+💬 Chat mode: All inputs treated as questions (use /ask for projects)
+
+💬 You: tell me about Python
+🤖 [Conversational response]
+
+💬 You: /ask create a calculator
+🚀 Building your project...
+
+# Build Mode - All input treated as project requests (default)
+💬 You: /mode build
+✅ Switched to BUILD mode
+
+💬 You: create a weather app
+🚀 Building your project...
+```
+
+### 📊 Status Display
+
+Check your current configuration anytime:
+```
+💬 You: /status
+
+📊 Current Settings:
+   Mode: BUILD
+   Clarifying Questions: ON
+   Working Directory: C:\Projects\my-app
+
+💡 Use '/mode chat' for conversational mode
+💡 Use '/mode build' for project building (default)
 ```
 
 ---
@@ -235,6 +293,30 @@ python ai-factory.py
 ✅ Bug fixed!
 ```
 
+### Example 4: Casual Conversation
+
+```bash
+# The system automatically detects casual conversation
+💬 You: how are u
+
+🤖 I'm here to help build software! Please describe what you'd like to create.
+
+💬 You: what can you do?
+
+🤖 I can generate code, modify projects, add features, fix bugs, write tests, and more!
+   Try asking me to build something like "Create a todo app" or "Build a REST API".
+
+# Or switch to chat mode for extended conversations
+💬 You: /mode chat
+✅ Switched to CHAT mode
+
+💬 You: explain async/await in Python
+🤖 [Detailed explanation of async/await...]
+
+💬 You: /mode build
+✅ Switched to BUILD mode
+```
+
 ---
 
 ## ⚙️ Configuration
@@ -247,7 +329,29 @@ Create a `.env` file:
 # Required
 OPENROUTER_API_KEY=sk-or-v1-your-api-key-here
 
-# Optional
+# Optional - Model Configuration
+# All models can be customized via environment variables
+PLANNING_MODEL_NAME=deepseek/deepseek-chat
+PLANNING_MODEL_MAX_TOKENS=8192
+PLANNING_MODEL_TEMPERATURE=0.3
+
+CODE_GENERATION_MODEL_NAME=deepseek/deepseek-chat
+CODE_GENERATION_MODEL_MAX_TOKENS=8192
+CODE_GENERATION_MODEL_TEMPERATURE=0.2
+
+CONVERSATIONAL_MODEL_NAME=deepseek/deepseek-chat
+CONVERSATIONAL_MODEL_MAX_TOKENS=500
+CONVERSATIONAL_MODEL_TEMPERATURE=0.7
+
+LOG_ANALYSIS_MODEL_NAME=meta-llama/llama-3.1-8b-instruct
+LOG_ANALYSIS_MODEL_MAX_TOKENS=2048
+LOG_ANALYSIS_MODEL_TEMPERATURE=0.1
+
+SUMMARIZATION_MODEL_NAME=openai/gpt-4o-mini
+SUMMARIZATION_MODEL_MAX_TOKENS=2048
+SUMMARIZATION_MODEL_TEMPERATURE=0.3
+
+# Other Settings
 LOG_LEVEL=INFO
 ENABLE_SEMANTIC_CACHE=true
 MAX_RETRIES=3
@@ -257,17 +361,30 @@ Get your API key at [openrouter.ai/keys](https://openrouter.ai/keys)
 
 ### Model Selection
 
-Edit `config/settings.py` to change the LLM model:
+Models are configured in `config/settings.py` and can be overridden via environment variables:
 
 ```python
-code_generation_model = ModelConfig(
-    model_name="deepseek/deepseek-chat",  # or "anthropic/claude-3.5-sonnet", etc.
+# Default configuration in settings.py
+planning_model = ModelConfig(
+    model_name="deepseek/deepseek-chat",
     max_tokens=8192,
-    temperature=0.2,
+    temperature=0.3,
 )
+
+# Override in .env file
+PLANNING_MODEL_NAME=anthropic/claude-3.5-sonnet
+PLANNING_MODEL_TEMPERATURE=0.5
 ```
 
 See [openrouter.ai/models](https://openrouter.ai/models) for available models.
+
+### Available Models
+
+- **Planning Model**: Used for architecture design and project planning
+- **Code Generation Model**: Used for writing code
+- **Conversational Model**: Used for Q&A and casual chat
+- **Log Analysis Model**: Used for analyzing execution logs
+- **Summarization Model**: Used for creating summaries
 
 ---
 
@@ -300,6 +417,12 @@ All edits show unified diff before applying - review exact changes before confir
 ### 4. Confirmation Prompts
 File overwrites require explicit "yes" confirmation. Cancel anytime.
 
+### 5. Clean Terminal Output
+The interactive interface uses human-readable logging:
+- Only shows warnings and errors (no verbose JSON logs)
+- Clean, minimal output for better user experience
+- Detailed JSON logs still available for debugging (non-interactive mode)
+
 ---
 
 ## 🆚 Comparison with Other Tools
@@ -308,9 +431,12 @@ File overwrites require explicit "yes" confirmation. Cancel anytime.
 |---------|-----------|-------------|--------|----------------|
 | Cost | **FREE** | $20/mo | $20/mo | $10/mo |
 | Multi-agent workflow | ✅ | ❌ | ❌ | ❌ |
+| Smart intent detection | ✅ | ❌ | ❌ | ❌ |
+| Chat/Build modes | ✅ | ❌ | ❌ | ❌ |
 | Clarifying questions | ✅ | ❌ | ❌ | ❌ |
 | Auto backups | ✅ | ❌ | ❌ | ❌ |
 | Undo/Redo | ✅ | ✅ | ✅ | ❌ |
+| Clean terminal output | ✅ | ✅ | ✅ | N/A |
 | Open source | ✅ | ❌ | ❌ | ❌ |
 | Self-hosted | ✅ | ❌ | ❌ | ❌ |
 

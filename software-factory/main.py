@@ -12,7 +12,7 @@ from observability.logger import get_logger
 from observability.metrics import metrics_collector
 from orchestrator.workflow_graph import WorkflowOrchestrator
 
-logger = get_logger(__name__)
+logger = get_logger(__name__, interactive=False)
 
 
 def run_factory(prompt: str, output_dir: str | None = None, clarifications: dict | None = None) -> dict:

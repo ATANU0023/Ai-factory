@@ -8,6 +8,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class ModelConfig(BaseSettings):
     """Configuration for a specific LLM model."""
 
+    model_config = SettingsConfigDict(
+        env_prefix="",
+        case_sensitive=False,
+    )
+
     model_name: str
     api_base: str = "https://openrouter.ai/api/v1"
     timeout: int = 60
@@ -66,7 +71,7 @@ class Settings(BaseSettings):
     # API Keys
     openrouter_api_key: str = Field(..., description="OpenRouter API key")
 
-    # Model configurations
+    # Model configurations (can be overridden via environment variables)
     planning_model: ModelConfig = Field(
         default_factory=lambda: ModelConfig(
             model_name="deepseek/deepseek-chat",
@@ -95,6 +100,44 @@ class Settings(BaseSettings):
             temperature=0.3,
         )
     )
+    conversational_model: ModelConfig = Field(
+        default_factory=lambda: ModelConfig(
+            model_name="deepseek/deepseek-chat",
+            max_tokens=500,
+            temperature=0.7,
+        )
+    )
+
+    def __init__(self, **kwargs):
+        """Initialize settings with environment variable support for models."""
+        super().__init__(**kwargs)
+        
+        # Override model configs with environment variables if present
+        self._load_model_from_env("planning_model", "PLANNING_MODEL")
+        self._load_model_from_env("code_generation_model", "CODE_GENERATION_MODEL")
+        self._load_model_from_env("log_analysis_model", "LOG_ANALYSIS_MODEL")
+        self._load_model_from_env("summarization_model", "SUMMARIZATION_MODEL")
+        self._load_model_from_env("conversational_model", "CONVERSATIONAL_MODEL")
+    
+    def _load_model_from_env(self, attr_name: str, env_prefix: str) -> None:
+        """Load model configuration from environment variables."""
+        import os
+        
+        model_name = os.getenv(f"{env_prefix}_MODEL_NAME")
+        max_tokens = os.getenv(f"{env_prefix}_MODEL_MAX_TOKENS")
+        temperature = os.getenv(f"{env_prefix}_MODEL_TEMPERATURE")
+        
+        if model_name or max_tokens or temperature:
+            current_config = getattr(self, attr_name)
+            new_config = ModelConfig(
+                model_name=model_name or current_config.model_name,
+                api_base=current_config.api_base,
+                timeout=current_config.timeout,
+                max_retries=current_config.max_retries,
+                temperature=float(temperature) if temperature else current_config.temperature,
+                max_tokens=int(max_tokens) if max_tokens else current_config.max_tokens,
+            )
+            setattr(self, attr_name, new_config)
 
     # Component configurations
     cost_governance: CostGovernanceConfig = Field(default_factory=CostGovernanceConfig)
@@ -110,13 +153,14 @@ class Settings(BaseSettings):
     vector_db_type: str = "qdrant"  # Options: "qdrant" or "chromadb"
     chroma_db_path: str = "./chroma_db"  # Path for ChromaDB storage
 
-    def get_model_for_task(self, task_type: Literal["planning", "code", "log_analysis", "summarization"]) -> ModelConfig:
+    def get_model_for_task(self, task_type: Literal["planning", "code", "log_analysis", "summarization", "conversation"]) -> ModelConfig:
         """Get model configuration for a specific task type."""
         model_map = {
             "planning": self.planning_model,
             "code": self.code_generation_model,
             "log_analysis": self.log_analysis_model,
             "summarization": self.summarization_model,
+            "conversation": self.conversational_model,
         }
         return model_map[task_type]
 
