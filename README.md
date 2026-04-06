@@ -321,7 +321,7 @@ File overwrites require explicit "yes" confirmation. Cancel anytime.
 ### Project Structure
 
 ```
-ai-software-factory/
+software-factory/
 ├── agents/              # Multi-agent system
 │   ├── architect_agent.py
 │   ├── developer_agent.py
