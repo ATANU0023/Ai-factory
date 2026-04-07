@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-from config.settings import settings
+from ai_software_factory.config.settings import settings
 
 
 class CorrelationIdFilter(logging.Filter):

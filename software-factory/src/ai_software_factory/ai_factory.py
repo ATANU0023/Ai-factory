@@ -1,12 +1,15 @@
 """AI Software Factory - Interactive CLI Interface (Claude Code-like)."""
 
 import sys
-from main import run_factory
-from agents.architect_agent import ArchitectAgent
-from router.model_router import ModelRouter
-from memory.semantic_cache import SemanticCache
-from tools.file_manager import FileManager
-from observability.logger import get_logger
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from ai_software_factory.main import run_factory
+from ai_software_factory.agents.architect_agent import ArchitectAgent
+from ai_software_factory.router.model_router import ModelRouter
+from ai_software_factory.memory.semantic_cache import SemanticCache
+from ai_software_factory.tools.file_manager import FileManager
+from ai_software_factory.observability.logger import get_logger
 
 # Use interactive mode for cleaner output
 logger = get_logger(__name__, interactive=True)
@@ -521,7 +524,8 @@ def one_shot_mode(description: str):
         print(f"\n❌ FAILED: {error}")
 
 
-if __name__ == "__main__":
+def cli_main():
+    """CLI entry point for the PyPI package."""
     if len(sys.argv) > 1:
         # One-shot mode
         description = " ".join(sys.argv[1:])
@@ -529,3 +533,6 @@ if __name__ == "__main__":
     else:
         # Interactive mode
         interactive_mode()
+
+if __name__ == "__main__":
+    cli_main()

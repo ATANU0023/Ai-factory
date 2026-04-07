@@ -47,17 +47,37 @@
 
 ### Installation
 
+The recommended way to install AI Software Factory securely is via `pipx` (or `pip`), which makes the `ai-factory` command globally available anywhere on your system.
+
+```bash
+# Install the package globally
+pipx install ai-software-factory
+
+# Set your API key as an environment variable
+# Mac/Linux:
+export OPENROUTER_API_KEY="sk-..."
+# Windows PowerShell:
+$env:OPENROUTER_API_KEY="sk-..."
+```
+
+### Local Development
+
+If you want to contribute to the project or run it locally from the source code:
+
 ```bash
 # Clone the repository
 git clone https://github.com/ATANU0023/Ai-factory.git
-cd software-factory
+cd Ai-factory/software-factory
 
-# Install dependencies
-pip install -r requirements.txt
+# Install in editable mode
+pip install -e .
 
 # Set up environment variables
 cp .env.example .env
 # Edit .env and add your OPENROUTER_API_KEY
+
+# Launch the factory!
+ai-factory
 ```
 
 ### Usage
@@ -69,7 +89,7 @@ cp .env.example .env
 cd C:\Users\YourName\Projects\my-web-app
 
 # Launch AI Factory
-python path/to/software-factory/ai_factory.py
+ai-factory
 
 💬 You: /pwd
 📂 Current directory: C:\Users\YourName\Projects\my-web-app
@@ -90,7 +110,7 @@ python path/to/software-factory/ai_factory.py
 #### Option 2: Create New Project
 
 ```bash
-python ai_factory.py
+ai-factory
 
 💬 You: Create a Flask REST API with user authentication
 
@@ -227,7 +247,7 @@ User Request
 
 ```bash
 cd my-flask-project
-python ai_factory.py
+ai-factory
 
 💬 You: Add rate limiting to all API endpoints
 
@@ -467,29 +487,20 @@ The AI Software Factory features a dynamic skill system that allows you to insta
 
 ```
 software-factory/
-├── agents/              # Multi-agent system
-│   ├── architect_agent.py
-│   ├── developer_agent.py
-│   ├── auditor_agent.py
-│   └── supervisor_agent.py
-├── orchestrator/        # Workflow orchestration
-│   └── workflow_graph.py
-├── memory/             # Vector storage & caching
-│   ├── vector_store.py
-│   └── semantic_cache.py
-├── router/             # LLM routing & fallback
-│   └── model_router.py
-├── sandbox/            # Code execution (optional Docker)
-│   └── docker_executor.py
-├── tools/              # Utility tools
-│   └── file_manager.py
-├── observability/      # Logging & metrics
-│   └── logger.py
-├── config/             # Configuration
-│   └── settings.py
-├── ai_factory.py       # Main CLI interface
-├── main.py             # Core factory logic
-└── requirements.txt    # Dependencies
+├── src/ai_software_factory/ # Core Package
+│   ├── agents/         # LangGraph AI agents
+│   ├── memory/         # ChromaDB & semantic cache
+│   ├── sandbox/        # Docker execution environment
+│   ├── tools/          # Filesystem/shell capabilities
+│   ├── orchestrator/   # LangGraph workflow
+│   ├── router/         # Model routing logic
+│   ├── observability/  # Logging & telemetry
+│   ├── config/         # Configuration
+│   ├── ai_factory.py   # Main CLI interface
+│   └── main.py         # Core factory logic
+├── tests/              # Pytest test suite
+├── pyproject.toml      # Package configuration
+└── README.md           # This file
 ```
 
 ### Running Tests

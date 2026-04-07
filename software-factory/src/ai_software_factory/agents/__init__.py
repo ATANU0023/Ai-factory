@@ -6,9 +6,9 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from observability.logger import get_logger
-from observability.metrics import TokenUsage, metrics_collector
-from router.model_router import ModelRouter, TaskType
+from ai_software_factory.observability.logger import get_logger
+from ai_software_factory.observability.metrics import TokenUsage, metrics_collector
+from ai_software_factory.router.model_router import ModelRouter, TaskType
 
 logger = get_logger(__name__)
 

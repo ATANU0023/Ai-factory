@@ -6,11 +6,11 @@ import sys
 import uuid
 from pathlib import Path
 
-from config.settings import settings
-from memory.vector_store import VectorStore
-from observability.logger import get_logger
-from observability.metrics import metrics_collector
-from orchestrator.workflow_graph import WorkflowOrchestrator
+from ai_software_factory.config.settings import settings
+from ai_software_factory.memory.vector_store import VectorStore
+from ai_software_factory.observability.logger import get_logger
+from ai_software_factory.observability.metrics import metrics_collector
+from ai_software_factory.orchestrator.workflow_graph import WorkflowOrchestrator
 
 logger = get_logger(__name__, interactive=False)
 

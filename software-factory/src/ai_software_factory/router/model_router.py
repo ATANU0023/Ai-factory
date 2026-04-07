@@ -7,11 +7,11 @@ import tiktoken
 from openai import OpenAI
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-from config.settings import ModelConfig, settings
-from memory.semantic_cache import SemanticCache
-from observability.logger import get_logger
-from observability.metrics import metrics_collector
-from memory.skill_manager import SkillManager
+from ai_software_factory.config.settings import ModelConfig, settings
+from ai_software_factory.memory.semantic_cache import SemanticCache
+from ai_software_factory.observability.logger import get_logger
+from ai_software_factory.observability.metrics import metrics_collector
+from ai_software_factory.memory.skill_manager import SkillManager
 
 logger = get_logger(__name__)
 

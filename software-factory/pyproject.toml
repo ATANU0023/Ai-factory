@@ -1,12 +1,15 @@
 [build-system]
-requires = ["setuptools>=68.0", "wheel"]
-build-backend = "setuptools.backends._legacy:_Backend"
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [project]
-name = "software-factory"
-version = "1.0.0"
+name = "ai-software-factory"
+version = "1.0.1"
 description = "Autonomous AI Software Factory - Production-grade multi-agent system"
+readme = "README.md"
 requires-python = ">=3.11"
+
+
 dependencies = [
     "langgraph==0.2.45",
     "langchain-core==0.3.9",
@@ -67,3 +70,9 @@ minversion = "8.0"
 addopts = "-ra -q --cov=. --cov-report=term-missing --cov-fail-under=80"
 testpaths = ["tests"]
 asyncio_mode = "auto"
+
+[project.scripts]
+ai-factory = "ai_software_factory.ai_factory:cli_main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

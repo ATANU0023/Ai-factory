@@ -5,13 +5,13 @@ from typing import Any, Literal
 from langgraph.graph import END, START, StateGraph
 from typing_extensions import TypedDict
 
-from agents.architect_agent import ArchitectAgent
-from agents.auditor_agent import AuditorAgent
-from agents.developer_agent import DeveloperAgent
-from agents.supervisor_agent import SupervisorAgent
-from memory.semantic_cache import SemanticCache
-from observability.logger import get_logger
-from router.model_router import ModelRouter
+from ai_software_factory.agents.architect_agent import ArchitectAgent
+from ai_software_factory.agents.auditor_agent import AuditorAgent
+from ai_software_factory.agents.developer_agent import DeveloperAgent
+from ai_software_factory.agents.supervisor_agent import SupervisorAgent
+from ai_software_factory.memory.semantic_cache import SemanticCache
+from ai_software_factory.observability.logger import get_logger
+from ai_software_factory.router.model_router import ModelRouter
 
 logger = get_logger(__name__)
 
