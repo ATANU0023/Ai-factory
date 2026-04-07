@@ -23,6 +23,7 @@
 - **Clarifying questions** - Understands your requirements before building (toggle with `/questions`)
 - **Multi-agent workflow** - Architect plans, Developer codes, Auditor tests
 - **Context-aware** - Analyzes existing codebase structure and style
+- **Dynamic Skills Injection** - Instantly teach agents new capabilities, rules, and guidelines by adding `.md` files to the `skills/` directory
 - **Clean terminal output** - Human-readable format, no verbose JSON logs
 
 ### 🛡️ Safety First
@@ -68,7 +69,7 @@ cp .env.example .env
 cd C:\Users\YourName\Projects\my-web-app
 
 # Launch AI Factory
-python path/to/software-factory/ai-factory.py
+python path/to/software-factory/ai_factory.py
 
 💬 You: /pwd
 📂 Current directory: C:\Users\YourName\Projects\my-web-app
@@ -89,7 +90,7 @@ python path/to/software-factory/ai-factory.py
 #### Option 2: Create New Project
 
 ```bash
-python ai-factory.py
+python ai_factory.py
 
 💬 You: Create a Flask REST API with user authentication
 
@@ -226,7 +227,7 @@ User Request
 
 ```bash
 cd my-flask-project
-python ai-factory.py
+python ai_factory.py
 
 💬 You: Add rate limiting to all API endpoints
 
@@ -442,6 +443,24 @@ The interactive interface uses human-readable logging:
 
 ---
 
+## 🧠 Dynamic Skills System
+
+The AI Software Factory features a dynamic skill system that allows you to instantly customize agent behavior and capabilities without changing any core code.
+
+- **How it works**: Simply drop a Markdown (`.md`) file into the `skills/` directory.
+- **Auto-Injection**: The `SkillManager` automatically reads all skill files and injects them as strict instructions into the base prompt of every agent (Architect, Developer, Auditor).
+- **Use Cases**: Perfect for enforcing coding standards, UI guidelines, specific framework patterns, or custom organizational rules.
+
+**Example `skills/frontend_rules.md`**:
+```markdown
+# Frontend Requirements
+- Always use semantic HTML5 tags instead of generic `div`s.
+- Keep the user interface clean with plenty of white space.
+- Write accessible interfaces (include aria-labels, alt text).
+```
+
+---
+
 ## 🛠️ Development
 
 ### Project Structure
@@ -468,7 +487,7 @@ ai-software-factory/
 │   └── logger.py
 ├── config/             # Configuration
 │   └── settings.py
-├── ai-factory.py       # Main CLI interface
+├── ai_factory.py       # Main CLI interface
 ├── main.py             # Core factory logic
 └── requirements.txt    # Dependencies
 ```
