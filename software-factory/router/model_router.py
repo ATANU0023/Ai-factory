@@ -11,6 +11,7 @@ from config.settings import ModelConfig, settings
 from memory.semantic_cache import SemanticCache
 from observability.logger import get_logger
 from observability.metrics import metrics_collector
+from memory.skill_manager import SkillManager
 
 logger = get_logger(__name__)
 
@@ -28,6 +29,7 @@ class ModelRouter:
             api_key=settings.openrouter_api_key or "",
         )
         self.token_counts: dict[str, int] = {"prompt": 0, "completion": 0}
+        self.skill_manager = SkillManager()
 
     def _is_valid_response(self, content: str, task_type: TaskType) -> bool:
         """Validate that response is appropriate for caching."""
@@ -172,6 +174,12 @@ class ModelRouter:
 
     def route_request(self, task_type: TaskType, prompt: str, system_prompt: str = "") -> dict[str, Any]:
         """Route a request to the appropriate model."""
+        
+        # Inject skills into the system prompt if available
+        skills_context = self.skill_manager.get_all_skills_text()
+        if skills_context and system_prompt:
+            system_prompt += f"\n{skills_context}"
+            
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})

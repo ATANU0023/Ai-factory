@@ -53,9 +53,9 @@ Write-Host "   - Option A: Qdrant Cloud (recommended, no Docker)" -ForegroundCol
 Write-Host "   - Option B: ChromaDB (lightweight, local)" -ForegroundColor White
 Write-Host "3. Run the factory:`n" -ForegroundColor White
 Write-Host "   Interactive mode:" -ForegroundColor Cyan
-Write-Host "   python ai-factory.py`n" -ForegroundColor White
+Write-Host "   python ai_factory.py`n" -ForegroundColor White
 Write-Host "   One-shot command:" -ForegroundColor Cyan
-Write-Host "   python ai-factory.py `"Build a calculator`"`n" -ForegroundColor White
+Write-Host "   python ai_factory.py `"Build a calculator`"`n" -ForegroundColor White
 
 Write-Host "For detailed instructions, see:" -ForegroundColor Yellow
 Write-Host "  - QUICKSTART.md" -ForegroundColor White
