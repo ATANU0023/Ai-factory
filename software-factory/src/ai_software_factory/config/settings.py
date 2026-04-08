@@ -69,7 +69,7 @@ class Settings(BaseSettings):
     )
 
     # API Keys
-    openrouter_api_key: str = Field(..., description="OpenRouter API key")
+    openrouter_api_key: str = Field(default="", description="OpenRouter API key")
 
     # Model configurations (can be overridden via environment variables)
     planning_model: ModelConfig = Field(

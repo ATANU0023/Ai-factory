@@ -526,6 +526,18 @@ def one_shot_mode(description: str):
 
 def cli_main():
     """CLI entry point for the PyPI package."""
+    from ai_software_factory.config.settings import settings
+    
+    if not settings.openrouter_api_key:
+        print("\n" + "=" * 80)
+        print("❌ ERROR: OPENROUTER_API_KEY is not set!")
+        print("To use the AI SDK globally, you must set your OpenRouter API key.")
+        print()
+        print("Please run this command first:")
+        print('  $env:OPENROUTER_API_KEY="your-api-key"')
+        print("=" * 80 + "\n")
+        sys.exit(1)
+
     if len(sys.argv) > 1:
         # One-shot mode
         description = " ".join(sys.argv[1:])
