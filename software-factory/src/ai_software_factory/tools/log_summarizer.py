@@ -1,7 +1,7 @@
 """Log summarization using LLM for concise error analysis."""
 
-from router.model_router import ModelRouter, TaskType
-from observability.logger import get_logger
+from ai_software_factory.router.model_router import ModelRouter, TaskType
+from ai_software_factory.observability.logger import get_logger
 
 logger = get_logger(__name__)
 

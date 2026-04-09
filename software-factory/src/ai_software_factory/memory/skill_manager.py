@@ -1,7 +1,7 @@
 """Skill manager for loading and injecting skills into agent prompts."""
 
 from pathlib import Path
-from observability.logger import get_logger
+from ai_software_factory.observability.logger import get_logger
 
 logger = get_logger(__name__)
 

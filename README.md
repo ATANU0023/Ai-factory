@@ -45,19 +45,28 @@
 - Python 3.13 or higher
 - OpenRouter API key (free at [openrouter.ai](https://openrouter.ai/))
 
-### Installation
+The easiest and most seamless way to install the AI Software Factory globally on Windows is using our one-line installer:
+
+```powershell
+# Open Windows PowerShell and paste this:
+irm https://raw.githubusercontent.com/ATANU0023/Ai-factory/main/install.ps1 | iex
+```
+
+*(This automatically handles all dependency configurations, Python pipx bindings, and system paths for you).*
+
+### Manual Installation (Mac/Linux)
+
+If you are not on Windows or prefer to install it manually:
 
 ```bash
-# Clone the repository
-git clone https://github.com/ATANU0023/Ai-factory.git
-cd software-factory
+# Install the package globally
+pipx install ai-software-factory
 
-# Install dependencies
-pip install -r requirements.txt
-
-# Set up environment variables
-cp .env.example .env
-# Edit .env and add your OPENROUTER_API_KEY
+# Set your API key as an environment variable
+# Mac/Linux:
+export OPENROUTER_API_KEY="sk-..."
+# Windows PowerShell:
+$env:OPENROUTER_API_KEY="sk-..."
 ```
 
 ### Usage

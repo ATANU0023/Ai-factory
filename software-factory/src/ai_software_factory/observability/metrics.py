@@ -4,7 +4,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
-from observability.logger import get_logger
+from ai_software_factory.observability.logger import get_logger
 
 logger = get_logger(__name__)
 

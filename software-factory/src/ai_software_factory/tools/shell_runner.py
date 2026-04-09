@@ -3,8 +3,8 @@
 import subprocess
 from typing import Literal
 
-from config.settings import settings
-from observability.logger import get_logger
+from ai_software_factory.config.settings import settings
+from ai_software_factory.observability.logger import get_logger
 
 logger = get_logger(__name__)
 

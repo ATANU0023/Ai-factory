@@ -1,6 +1,7 @@
 """Configuration management for the Autonomous AI Software Factory."""
 
 from typing import Literal
+from pathlib import Path
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -63,13 +64,13 @@ class Settings(BaseSettings):
     """Main application settings."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(".env", str(Path.home() / ".ai-factory-env")),
         env_file_encoding="utf-8",
         case_sensitive=False,
     )
 
     # API Keys
-    openrouter_api_key: str = Field(..., description="OpenRouter API key")
+    openrouter_api_key: str = Field(default="", description="OpenRouter API key")
 
     # Model configurations (can be overridden via environment variables)
     planning_model: ModelConfig = Field(
@@ -150,7 +151,7 @@ class Settings(BaseSettings):
     project_output_dir: str = "./output"
     
     # Vector database configuration
-    vector_db_type: str = "qdrant"  # Options: "qdrant" or "chromadb"
+    vector_db_type: str = "chromadb"  # Options: "qdrant" or "chromadb". Default chromadb (no server needed)
     chroma_db_path: str = "./chroma_db"  # Path for ChromaDB storage
 
     def get_model_for_task(self, task_type: Literal["planning", "code", "log_analysis", "summarization", "conversation"]) -> ModelConfig:
