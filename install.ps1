@@ -40,18 +40,28 @@ try {
 }
 
 # 3. Install AI Software Factory
-Write-Host 'Installing AI Software Factory from PyPI...' -ForegroundColor Cyan
+Write-Host 'Choose your Engine Package:' -ForegroundColor Cyan
+Write-Host '  A) Standard  - Base engine only (Fastest install)'
+Write-Host '  B) Local AI  - Includes built-in AI models for 100% offline use (Recommended)'
+$choice = Read-Host 'Selection (A/B)'
+
+$installPkg = "ai-software-factory"
+if ($choice -match '^[bB]') {
+    $installPkg = "ai-software-factory[local]"
+}
+
+Write-Host "Installing $installPkg from PyPI..." -ForegroundColor Cyan
 # Run via python -m pipx to completely bypass path mapping issues
-python -m pipx install ai-software-factory --force
+python -m pipx install "$installPkg" --force
 
 # 4. Configure Application Mode
 Write-Host ''
 Write-Host '4. Configuration' -ForegroundColor Cyan
 Write-Host 'The AI Software Factory can run in TWO modes:' -ForegroundColor White
-Write-Host '  1. 🟢 Local Mode  - Completely FREE, runs on your CPU, no key needed.' -ForegroundColor Green
-Write-Host '  2. 🔵 Cloud Mode  - Fast, premium quality, requires OpenRouter API key.' -ForegroundColor Blue
+Write-Host '  1. 🟢 Local Mode  - Completely FREE, private, no key needed.' -ForegroundColor Green
+Write-Host '  2. 🔵 Cloud Mode  - Premium quality using OpenRouter API key.' -ForegroundColor Blue
 Write-Host ''
-$wantKey = Read-Host 'Would you like to set up a Cloud API key now? If no, we will use Local Mode (Y/N)'
+$wantKey = Read-Host 'Would you like to set up a Cloud API key now? If no, we will default to Local Mode (Y/N)'
 if ($wantKey -match '^[yY]') {
     $apiKey = Read-Host 'Paste your OpenRouter API key here'
     if (-not [string]::IsNullOrWhiteSpace($apiKey)) {
@@ -62,21 +72,16 @@ if ($wantKey -match '^[yY]') {
         # Write to ~/.ai-factory-env so the app always finds it (primary read source)
         $envFilePath = Join-Path $HOME '.ai-factory-env'
         $envLine = 'OPENROUTER_API_KEY=' + $apiKey.Trim()
-        if (Test-Path $envFilePath) {
-            $existing = Get-Content $envFilePath -Raw
-            if ($existing -match 'OPENROUTER_API_KEY=') {
-                $existing = $existing -replace 'OPENROUTER_API_KEY=.*', $envLine
-                Set-Content $envFilePath $existing -Encoding UTF8
-            } else {
-                Add-Content $envFilePath $envLine -Encoding UTF8
-            }
-        } else {
-            Set-Content $envFilePath $envLine -Encoding UTF8
+        
+        # Ensure directory exists for the config file
+        if (-not (Test-Path $envFilePath)) {
+            New-Item -Path $envFilePath -ItemType File -Force | Out-Null
         }
+        Set-Content $envFilePath $envLine -Encoding UTF8
         Write-Host '[SUCCESS] API Key saved permanently!' -ForegroundColor Green
     }
 } else {
-    Write-Host 'Skipped API key setup. Run "ai-factory auth" later to configure.' -ForegroundColor Yellow
+    Write-Host 'Running in Local Mode. You can add a key later via "ai-factory auth".' -ForegroundColor Yellow
 }
 
 # 5. Final Instructions

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ai-software-factory"
-version = "1.0.10"
+version = "1.0.11"
 description = "Autonomous AI Software Factory - Production-grade multi-agent system"
 readme = "README.md"
 requires-python = ">=3.11"
