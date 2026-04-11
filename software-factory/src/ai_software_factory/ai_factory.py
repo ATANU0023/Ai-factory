@@ -5,6 +5,10 @@ import os
 import re
 import getpass
 from pathlib import Path
+
+# Set global interactive logging state before other imports
+os.environ["AI_FACTORY_INTERACTIVE"] = "true"
+
 if str(Path(__file__).parent.parent) not in sys.path:
     sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -44,18 +48,16 @@ def _is_project_request(user_input: str) -> bool:
 
 
 def _handle_conversational_query(query: str):
-    """Handle general questions conversationally using LLM."""
+    """Handle general questions conversationally using either local or cloud LLM."""
     print("\n🤖 Thinking...")
 
     try:
-        from openai import OpenAI
+        from ai_software_factory.router.model_router import ModelRouter
         from ai_software_factory.config.settings import settings
         from datetime import datetime
 
-        client = OpenAI(
-            base_url="https://openrouter.ai/api/v1",
-            api_key=settings.openrouter_api_key,
-        )
+        # Use unified ModelRouter which handles local vs cloud
+        router = ModelRouter(session_id="conversational-query")
 
         current_datetime = datetime.now()
         current_date_str = current_datetime.strftime("%A, %B %d, %Y")
@@ -75,23 +77,13 @@ Key capabilities:
 - Add features, fix bugs, write tests
 - Undo/redo changes with automatic backups
 - Ask clarifying questions for complex projects
+- Can run COMPLETELY OFFLINE with Local Mode
 
 Keep responses brief and actionable.
 If asked about current date/time, use the context provided above."""
 
-        conv_model = settings.conversational_model
-
-        response = client.chat.completions.create(
-            model=conv_model.model_name,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": query}
-            ],
-            temperature=conv_model.temperature,
-            max_tokens=conv_model.max_tokens,
-        )
-
-        answer = response.choices[0].message.content or ""
+        result = router.route_request("conversation", query, system_prompt)
+        answer = result["response"]
 
         print("\n" + "=" * 80)
         print("💡 Answer:")
@@ -330,51 +322,113 @@ def handle_backups_command(file_manager: FileManager):
 
 
 def run_auth_wizard():
-    """Interactive terminal wizard for saving / rotating the OpenRouter API key."""
+    """Interactive terminal wizard for configuring Local vs Cloud mode."""
     print("\n" + "=" * 80)
-    print("  AI Software Factory — API Key Configuration")
+    print("  AI Software Factory — Configuration Wizard")
     print("=" * 80)
-    print("You need a free OpenRouter API key to run the AI Factory.")
-    print("Get one at: https://openrouter.ai/keys\n")
+    print("How would you like to run the AI Factory?")
+    print("\n1. 🟢 Local Mode (FREE, No Setup, Runs on CPU)")
+    print("   - No API key needed")
+    print("   - Completely private and offline")
+    print("   - Requires ~1GB one-time model download")
+    print("\n2. 🔵 Cloud Mode (Fast, Premium Quality)")
+    print("   - Requires free OpenRouter API key")
+    print("   - Uses powerful cloud models (GPT-4, Claude, DeepSeek)")
+    print("=" * 80)
 
-    key = getpass.getpass("Paste your API Key (characters hidden for security): ").strip()
-
-    if not key or len(key) < 20:
-        print("\n❌ The key you entered seems invalid. Auth aborted.")
-        sys.exit(1)
+    choice = input("\nChoose your setup (1/2): ").strip()
 
     env_file_path = Path.home() / ".ai-factory-env"
+    from ai_software_factory.config.settings import settings
 
-    try:
-        if env_file_path.exists():
-            content = env_file_path.read_text(encoding="utf-8")
-            if "OPENROUTER_API_KEY=" in content:
-                new_content = re.sub(r"OPENROUTER_API_KEY=.*", f"OPENROUTER_API_KEY={key}", content)
-                env_file_path.write_text(new_content, encoding="utf-8")
+    if choice == "1":
+        # Local Mode setup
+        from ai_software_factory.router.local_llm import check_local_dependencies
+        missing = check_local_dependencies()
+        
+        if missing:
+            print("\n" + "!" * 80)
+            print("⚠️  MISSING DEPENDENCIES FOR LOCAL MODE")
+            print("!" * 80)
+            print("To run AI locally on your CPU, you need to install the inference engine.")
+            print("\nPlease run this command in your terminal and then try again:")
+            print(f"\n   pip install \"ai-software-factory[local]\"")
+            print("\n" + "!" * 80 + "\n")
+            return
+
+        try:
+            content = ""
+            if env_file_path.exists():
+                content = env_file_path.read_text(encoding="utf-8")
+            
+            # Update or add USE_LOCAL_LLM
+            if "USE_LOCAL_LLM=" in content:
+                new_content = re.sub(r"USE_LOCAL_LLM=.*", "USE_LOCAL_LLM=True", content)
             else:
-                with open(env_file_path, "a", encoding="utf-8") as f:
-                    f.write(f"\nOPENROUTER_API_KEY={key}\n")
-        else:
-            env_file_path.write_text(f"OPENROUTER_API_KEY={key}\n", encoding="utf-8")
+                new_content = content + "\nUSE_LOCAL_LLM=True\n"
+            
+            env_file_path.write_text(new_content, encoding="utf-8")
+            settings.use_local_llm = True
+            
+            # Check for model download
+            from ai_software_factory.router.local_llm import LocalLLMManager
+            manager = LocalLLMManager()
+            if not manager.is_model_downloaded():
+                print("\nModel not found locally. Initiating download...")
+                if not manager.download_model():
+                    print("\n❌ Model download failed. Switching to cloud mode fallback.")
+                    settings.use_local_llm = False
+                else:
+                    print("\n✅ Local Mode configured successfully!")
+            else:
+                print("\n✅ Local Mode is ready (model already exists)!")
 
-        # Inject into current session memory — no restart needed
-        from ai_software_factory.config.settings import settings
-        settings.openrouter_api_key = key
+        except Exception as e:
+            print(f"\n❌ Failed to save configuration: {e}")
 
-        print(f"\n✅ API Key saved permanently to: {env_file_path}")
-        print("Run 'ai-factory auth' any time to update your key.")
-        print("=" * 80 + "\n")
+    elif choice == "2":
+        # Cloud Mode setup
+        print("\nYou need a free OpenRouter API key.")
+        print("Get one at: https://openrouter.ai/keys\n")
+        key = getpass.getpass("Paste your API Key (characters hidden): ").strip()
 
-    except Exception as e:
-        print(f"\n❌ Failed to save configuration: {e}")
-        sys.exit(1)
+        if not key or len(key) < 20:
+            print("\n❌ Invalid key. Setup aborted.")
+            return
+
+        try:
+            content = ""
+            if env_file_path.exists():
+                content = env_file_path.read_text(encoding="utf-8")
+            
+            # Update API key and disable Local Mode
+            if "OPENROUTER_API_KEY=" in content:
+                content = re.sub(r"OPENROUTER_API_KEY=.*", f"OPENROUTER_API_KEY={key}", content)
+            else:
+                content += f"\nOPENROUTER_API_KEY={key}\n"
+            
+            if "USE_LOCAL_LLM=" in content:
+                content = re.sub(r"USE_LOCAL_LLM=.*", "USE_LOCAL_LLM=False", content)
+            else:
+                content += "\nUSE_LOCAL_LLM=False\n"
+            
+            env_file_path.write_text(content, encoding="utf-8")
+            settings.openrouter_api_key = key
+            settings.use_local_llm = False
+            
+            print(f"\n✅ Cloud Mode configured successfully!")
+        except Exception as e:
+            print(f"\n❌ Failed to save configuration: {e}")
+
+    else:
+        print("\n❌ Invalid choice. Setup aborted.")
 
 
 def interactive_mode():
     """Run in interactive mode like Claude Code."""
     print_banner()
 
-    file_manager = FileManager("./output")
+    file_manager = FileManager(".")
     ask_questions = True
     current_mode = "build"
 
@@ -484,7 +538,7 @@ def interactive_mode():
             print("\n🚀 Building your project...\n")
             print("-" * 80)
 
-            result = run_factory(user_input, "./output", clarifications)
+            result = run_factory(user_input, file_manager.base_dir, clarifications)
 
             print("-" * 80)
 
@@ -527,12 +581,12 @@ def one_shot_mode(description: str):
     """Run in one-shot mode (non-interactive)."""
     print(f"🚀 Building: {description}\n")
 
-    result = run_factory(description, "./output")
+    result = run_factory(description, ".")
 
     status = result.get("final_status", "unknown")
     if status == "success":
         files = result.get("generated_files", [])
-        print(f"\n✅ SUCCESS: Generated {len(files)} file(s) in ./output/")
+        print(f"\n✅ SUCCESS: Generated {len(files)} file(s) in {os.getcwd()}")
     else:
         error = result.get("error", "Unknown error")
         print(f"\n❌ FAILED: {error}")
@@ -547,10 +601,18 @@ def cli_main():
         run_auth_wizard()
         sys.exit(0)
 
-    # Auto-intercept: launch wizard if no key is configured at all
-    if not settings.openrouter_api_key:
-        print("\n⚠️  No API Key detected — let's fix that right now!")
+    # Auto-intercept: launch wizard if no key is configured AND NOT using local LLM
+    if not settings.openrouter_api_key and not settings.use_local_llm:
+        print("\n⚠️  No Configuration detected — let's set up the factory!")
         run_auth_wizard()
+    
+    # Second-level intercept: Local mode enabled but model missing
+    if settings.use_local_llm:
+        from ai_software_factory.router.local_llm import LocalLLMManager
+        manager = LocalLLMManager()
+        if not manager.is_model_downloaded():
+            print("\n⚠️  Local Mode enabled but model is missing.")
+            run_auth_wizard()
 
     if len(sys.argv) > 1:
         # One-shot mode: ai-factory "build me a todo app"

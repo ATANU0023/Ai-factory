@@ -12,6 +12,7 @@ from ai_software_factory.memory.semantic_cache import SemanticCache
 from ai_software_factory.observability.logger import get_logger
 from ai_software_factory.observability.metrics import metrics_collector
 from ai_software_factory.memory.skill_manager import SkillManager
+from ai_software_factory.router.local_llm import LocalLLMManager
 
 logger = get_logger(__name__)
 
@@ -24,10 +25,16 @@ class ModelRouter:
     def __init__(self, session_id: str, semantic_cache: SemanticCache | None = None) -> None:
         self.session_id = session_id
         self.semantic_cache = semantic_cache or SemanticCache()
-        self.client = OpenAI(
-            base_url=settings.openrouter_api_key and "https://openrouter.ai/api/v1" or "",
-            api_key=settings.openrouter_api_key or "",
-        )
+        self.local_manager = LocalLLMManager()
+        
+        # Initialize client only if we have a key or not using local LLM
+        self.client = None
+        if settings.openrouter_api_key:
+            self.client = OpenAI(
+                base_url="https://openrouter.ai/api/v1",
+                api_key=settings.openrouter_api_key,
+            )
+        
         self.token_counts: dict[str, int] = {"prompt": 0, "completion": 0}
         self.skill_manager = SkillManager()
 
@@ -105,23 +112,45 @@ class ModelRouter:
         # Execute LLM call
         start_time = time.time()
         try:
-            response = self.client.chat.completions.create(
-                model=model_config.model_name,
-                messages=messages,
-                temperature=model_config.temperature,
-                max_tokens=model_config.max_tokens,
-                timeout=model_config.timeout,
-            )
+            # Use local LLM if enabled or if no OpenRouter client available
+            if settings.use_local_llm or not self.client:
+                logger.info("Routing request to local LLM engine...")
+                local_result = self.local_manager.generate(
+                    messages=messages,
+                    temperature=model_config.temperature,
+                    max_tokens=model_config.max_tokens
+                )
+                
+                if local_result:
+                    content = local_result["content"]
+                    usage = type('Usage', (), local_result["usage"])() # Mock usage object
+                    model_name = local_result["model"]
+                    latency = local_result["latency"]
+                else:
+                    if self.client:
+                        logger.warning("Local inference failed, falling back to cloud...")
+                        # Proceed to OpenAI call below
+                    else:
+                        raise RuntimeError("Local inference failed and no cloud API key found. Please run 'ai-factory auth'.")
+            
+            # Use OpenRouter client if not handled by local LLM
+            if not settings.use_local_llm and self.client:
+                response = self.client.chat.completions.create(
+                    model=model_config.model_name,
+                    messages=messages,
+                    temperature=model_config.temperature,
+                    max_tokens=model_config.max_tokens,
+                    timeout=model_config.timeout,
+                )
+                content = response.choices[0].message.content
+                usage = response.usage
+                model_name = model_config.model_name
+                latency = time.time() - start_time
 
-            latency = time.time() - start_time
-
-            # Extract response
-            content = response.choices[0].message.content
-            usage = response.usage
-
-            prompt_tokens = usage.prompt_tokens if usage else self._count_tokens(request_text, model_config.model_name)
-            completion_tokens = usage.completion_tokens if usage else self._count_tokens(content or "", model_config.model_name)
-            cost = self._calculate_cost(prompt_tokens, completion_tokens, model_config.model_name)
+            # Record usage and handle metrics...
+            prompt_tokens = getattr(usage, 'prompt_tokens', 0)
+            completion_tokens = getattr(usage, 'completion_tokens', 0)
+            cost = self._calculate_cost(prompt_tokens, completion_tokens, model_name) if not model_name.startswith("local:") else 0.0
 
             # Record metrics
             metrics_collector.record_llm_call(

@@ -1,13 +1,18 @@
-"""Structured JSON logging with correlation IDs and OpenTelemetry integration."""
-
-import json
-import logging
+import os
+import sys
 import uuid
+import logging
+import json
 from datetime import datetime, timezone
 from typing import Any
 
 from ai_software_factory.config.settings import settings
 
+# Global flag for interactive mode (CLI usage)
+IS_INTERACTIVE_MODE = (
+    os.environ.get("AI_FACTORY_INTERACTIVE") == "true" 
+    or sys.stdin.isatty() # If running in a real terminal, it's interactive!
+)
 
 class CorrelationIdFilter(logging.Filter):
     """Add correlation ID to all log records."""
@@ -22,19 +27,22 @@ class HumanReadableFormatter(logging.Formatter):
     """Format logs in human-readable format for interactive mode."""
 
     def format(self, record: logging.LogRecord) -> str:
-        # Only show WARNING and ERROR in interactive mode
-        if record.levelno >= logging.WARNING:
+        # In interactive mode, only show actual ERRORS to keep it clean
+        if record.levelno >= logging.ERROR:
             timestamp = datetime.now(timezone.utc).strftime("%H:%M:%S")
             level = record.levelname
             message = record.getMessage()
             return f"[{timestamp}] {level}: {message}"
-        return ""  # Suppress INFO and DEBUG in interactive mode
-
+        return ""  # Suppress INFO and WARNING in interactive mode
 
 class StructuredFormatter(logging.Formatter):
     """Format logs as structured JSON."""
 
     def format(self, record: logging.LogRecord) -> str:
+        # Return empty if we are in interactive mode but somehow this formatter is called
+        if IS_INTERACTIVE_MODE:
+            return ""
+            
         log_data: dict[str, Any] = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "level": record.levelname,
@@ -60,26 +68,30 @@ class StructuredFormatter(logging.Formatter):
         return json.dumps(log_data)
 
 
-def get_logger(name: str, interactive: bool = False) -> logging.Logger:
+def get_logger(name: str, interactive: bool | None = None) -> logging.Logger:
     """Get a configured logger with structured JSON output.
     
     Args:
         name: Logger name
-        interactive: If True, use human-readable format (suppress INFO logs)
+        interactive: If True, use human-readable format. If None, auto-detect (defaults to True for CLI).
     """
     logger = logging.getLogger(name)
 
+    # Force interactive mode if running in terminal
+    is_interactive = True if IS_INTERACTIVE_MODE else (interactive if interactive is not None else False)
+
     if not logger.handlers:
-        logger.setLevel(getattr(logging, settings.log_level))
+        # Use WARNING as base level, but HumanReadableFormatter will filter even more
+        logger.setLevel(logging.WARNING)
 
         # Console handler
         console_handler = logging.StreamHandler()
         
         # Use human-readable format for interactive mode
-        if interactive:
+        if is_interactive:
             console_handler.setFormatter(HumanReadableFormatter())
-            # In interactive mode, only show WARNING and above
-            console_handler.setLevel(logging.WARNING)
+            # In interactive mode, only show ERROR and above by default on the handler
+            console_handler.setLevel(logging.ERROR)
         else:
             console_handler.setFormatter(StructuredFormatter())
             

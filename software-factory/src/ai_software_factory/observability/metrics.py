@@ -135,9 +135,10 @@ class MetricsCollector:
         """Record an LLM call."""
         session = self.get_session(session_id)
         if not session:
-            logger.warning(f"Session {session_id} not found for metrics recording")
-            return
-
+            # Auto-create session for transient queries (like CLI conversation)
+            session = self.create_session(session_id)
+            logger.debug(f"Auto-created metrics session: {session_id}")
+        
         tokens = TokenUsage(
             prompt_tokens=prompt_tokens,
             completion_tokens=completion_tokens,

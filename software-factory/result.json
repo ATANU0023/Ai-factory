@@ -1,0 +1,6 @@
+{
+  "user_input": "--help",
+  "final_status": "failed",
+  "error": "Recursion limit of 50 reached without hitting a stop condition. You can increase the limit by setting the `recursion_limit` config key.\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langgraph/errors/GRAPH_RECURSION_LIMIT",
+  "generated_files": []
+}

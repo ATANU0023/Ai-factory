@@ -28,7 +28,7 @@ class SemanticCache:
                     self.vector_store = ChromaDBStore()
                     logger.info("Using ChromaDB for semantic cache")
                 except Exception as e:
-                    logger.warning(f"ChromaDB unavailable, running without cache: {e}")
+                    logger.info(f"ChromaDB unavailable, running without cache: {e}")
             else:
                 try:
                     self.vector_store = VectorStore()

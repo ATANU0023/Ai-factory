@@ -71,6 +71,12 @@ class Settings(BaseSettings):
 
     # API Keys
     openrouter_api_key: str = Field(default="", description="OpenRouter API key")
+    
+    # Local LLM Config
+    use_local_llm: bool = Field(default=False, description="Use local LLM for inference instead of cloud APIs")
+    local_model_repo: str = Field(default="Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF")
+    local_model_file: str = Field(default="qwen2.5-coder-1.5b-instruct-q4_k_m.gguf")
+    local_model_dir: str = Field(default=str(Path.home() / ".ai-factory" / "models"))
 
     # Model configurations (can be overridden via environment variables)
     planning_model: ModelConfig = Field(

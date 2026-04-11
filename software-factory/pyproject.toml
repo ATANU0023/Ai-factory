@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ai-software-factory"
-version = "1.0.7"
+version = "1.0.10"
 description = "Autonomous AI Software Factory - Production-grade multi-agent system"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -27,8 +27,14 @@ dependencies = [
     "ruff>=0.7.2",
     "mypy>=1.13.0",
     "python-dotenv>=1.0.1",
-    "tenacity>=8.1.0",
     "tiktoken>=0.8.0",
+]
+
+[project.optional-dependencies]
+local = [
+    "llama-cpp-python>=0.3.1",
+    "huggingface-hub>=0.26.2",
+    "tqdm>=4.66.5",
 ]
 
 [tool.black]

@@ -44,11 +44,14 @@ Write-Host 'Installing AI Software Factory from PyPI...' -ForegroundColor Cyan
 # Run via python -m pipx to completely bypass path mapping issues
 python -m pipx install ai-software-factory --force
 
-# 4. Configure API Key
+# 4. Configure Application Mode
 Write-Host ''
-Write-Host '4. API Configuration' -ForegroundColor Cyan
-Write-Host 'The AI Software Factory requires an OpenRouter API key to function.' -ForegroundColor White
-$wantKey = Read-Host 'Would you like to set up your API key now? (Y/N)'
+Write-Host '4. Configuration' -ForegroundColor Cyan
+Write-Host 'The AI Software Factory can run in TWO modes:' -ForegroundColor White
+Write-Host '  1. 🟢 Local Mode  - Completely FREE, runs on your CPU, no key needed.' -ForegroundColor Green
+Write-Host '  2. 🔵 Cloud Mode  - Fast, premium quality, requires OpenRouter API key.' -ForegroundColor Blue
+Write-Host ''
+$wantKey = Read-Host 'Would you like to set up a Cloud API key now? If no, we will use Local Mode (Y/N)'
 if ($wantKey -match '^[yY]') {
     $apiKey = Read-Host 'Paste your OpenRouter API key here'
     if (-not [string]::IsNullOrWhiteSpace($apiKey)) {
