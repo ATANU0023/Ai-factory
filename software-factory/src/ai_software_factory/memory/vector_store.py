@@ -6,8 +6,8 @@ from typing import Any
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
 
-from config.settings import settings
-from observability.logger import get_logger
+from ai_software_factory.config.settings import settings
+from ai_software_factory.observability.logger import get_logger
 
 logger = get_logger(__name__)
 

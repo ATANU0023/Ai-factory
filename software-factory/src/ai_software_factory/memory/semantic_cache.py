@@ -4,9 +4,9 @@ import hashlib
 import time
 from typing import Any
 
-from config.settings import settings
-from memory.vector_store import VectorStore
-from observability.logger import get_logger
+from ai_software_factory.config.settings import settings
+from ai_software_factory.memory.vector_store import VectorStore
+from ai_software_factory.observability.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -16,19 +16,25 @@ class SemanticCache:
 
     def __init__(self, vector_store: VectorStore | None = None) -> None:
         # Auto-detect and use appropriate vector store
+        self.vector_store = None
         if vector_store:
             self.vector_store = vector_store
         else:
-            # Try to determine which vector store to use
-            vector_db_type = getattr(settings, 'vector_db_type', 'qdrant')
-            
+            vector_db_type = getattr(settings, 'vector_db_type', 'chromadb')
+
             if vector_db_type == 'chromadb':
-                from memory.chromadb_store import ChromaDBStore
-                self.vector_store = ChromaDBStore()
-                logger.info("Using ChromaDB for semantic cache")
+                try:
+                    from ai_software_factory.memory.chromadb_store import ChromaDBStore
+                    self.vector_store = ChromaDBStore()
+                    logger.info("Using ChromaDB for semantic cache")
+                except Exception as e:
+                    logger.info(f"ChromaDB unavailable, running without cache: {e}")
             else:
-                self.vector_store = VectorStore()
-                logger.info("Using Qdrant for semantic cache")
+                try:
+                    self.vector_store = VectorStore()
+                    logger.info("Using Qdrant for semantic cache")
+                except Exception as e:
+                    logger.warning(f"Qdrant unavailable, running without cache: {e}")
         
         self.threshold = settings.cost_governance.semantic_cache_threshold
         self.cache_ttl = 3600  # 1 hour TTL
@@ -51,6 +57,8 @@ class SemanticCache:
 
     def check_cache(self, request_text: str) -> dict[str, Any] | None:
         """Check if a similar request exists in cache."""
+        if not self.vector_store:
+            return None
         try:
             query_vector = self._generate_query_vector(request_text)
 
@@ -97,6 +105,8 @@ class SemanticCache:
         completion_tokens: int,
     ) -> None:
         """Store LLM result in cache."""
+        if not self.vector_store:
+            return
         try:
             query_vector = self._generate_query_vector(request_text)
             total_tokens = prompt_tokens + completion_tokens

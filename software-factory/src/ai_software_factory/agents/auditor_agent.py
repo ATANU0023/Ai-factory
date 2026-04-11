@@ -5,11 +5,11 @@ from typing import Any, Literal
 
 from pydantic import BaseModel
 
-from agents import BaseAgent
-from observability.logger import get_logger
-from observability.metrics import TokenUsage
-from router.model_router import TaskType
-from sandbox.docker_executor import SandboxExecutor
+from ai_software_factory.agents import BaseAgent
+from ai_software_factory.observability.logger import get_logger
+from ai_software_factory.observability.metrics import TokenUsage
+from ai_software_factory.router.model_router import TaskType
+from ai_software_factory.sandbox.docker_executor import SandboxExecutor
 
 logger = get_logger(__name__)
 

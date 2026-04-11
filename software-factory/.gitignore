@@ -83,3 +83,6 @@ temp_*
 # Documentation build
 docs/_build/
 site/
+
+# Local cheatsheets
+DEVELOPMENT_CHEATSHEET.md

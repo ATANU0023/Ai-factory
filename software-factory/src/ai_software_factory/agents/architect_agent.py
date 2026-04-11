@@ -4,10 +4,10 @@ import json
 import time
 from typing import Any
 
-from agents import ArchitectPlan, BaseAgent
-from observability.logger import get_logger
-from observability.metrics import TokenUsage
-from router.model_router import TaskType
+from ai_software_factory.agents import ArchitectPlan, BaseAgent
+from ai_software_factory.observability.logger import get_logger
+from ai_software_factory.observability.metrics import TokenUsage
+from ai_software_factory.router.model_router import TaskType
 
 logger = get_logger(__name__)
 
