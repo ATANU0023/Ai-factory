@@ -1,61 +1,41 @@
-# 🤖 AI Software Factory (Sub-Project)
+# 🤖 AI Software Factory (Core)
 
 **The core engine behind the AI Software Factory.** This package handles agent orchestration, local LLM inference, and filesystem management.
 
 ---
 
-## 🚀 Version 1.0.10 Highlights
-- **💨 Optimized Local Mode**: 2-3x faster response times on CPU using physical-core threading.
-- **✨ Clean Console**: Silenced JSON logs and technical warnings for a professional CLI look.
-- **📍 Current Directory Focus**: No more `./output` folder—the AI builds and edits files directly where you are.
+## 🛠️ Technical Overview
+
+### Directory Structure
+- **`agents/`**: Core multi-agent logic (Architect, Developer, Auditor).
+- **`router/`**: Model routing system with fallback and Local LLM (Llama-cpp) support.
+- **`memory/`**: Semantic cache (ChromaDB) and Skill Manager.
+- **`tools/`**: Filesystem tools, diff generators, and backup managers.
+- **`observability/`**: Human-readable logging and performance metrics.
+- **`config/`**: Pydantic-based settings for Local vs Cloud operation.
 
 ---
 
-## 🛠️ Usage Guide
+## 🚀 Version 1.0.11
+- **💨 Optimized Local Mode**: Multi-threaded core allocation for CPU.
+- **✨ Clean Console**: Silenced JSON technical logs for CLI interactions.
+- **📍 Direct Filesystem Focus**: Edits files in-place within your active directory.
 
-### 1. Launching
-After installation via `pipx`, simply run:
+---
+
+## 📦 Developer Setup (Local)
+To modify the core engine:
 ```bash
-ai-factory
-```
-
-### 2. Configuration (`/auth`)
-The first time you run the tool, use `/auth` to choose your engine:
-- **🟢 Local Mode**: Zero-Key, private, and free. Downloads a ~1GB model on first use.
-- **🔵 Cloud Mode**: High-speed, uses OpenRouter. Requires an API Key.
-
-### 3. Basic Workflow
-AI Factory distinguishes between **Casual Chat** and **Build Requests** automatically.
-- **Project Request**: "Add a login page to this react app" -> Triggers the Architect/Developer workflow.
-- **Casual Question**: "What is Python?" -> Responds with a helpful answer.
-
----
-
-## 📋 Commands
-
-| Command | Action |
-|---------|--------|
-| `/cd <path>` | Change the factory's working directory. |
-| `/list` | List all files in the current focus folder. |
-| `/read <file>` | View a file with line numbers (helps with manual review). |
-| `/edit <file>` | Open a specific file for AI modification. |
-| `/undo` | Roll back the last code change made by the AI. |
-| `/status` | Check if you are in Local or Cloud mode. |
-| `/questions` | Toggle whether the AI asks clarifying questions. |
-
----
-
-## 📦 Maintenance
-To update to the latest version of the AI Software Factory:
-```bash
-pipx upgrade ai-software-factory
+git clone https://github.com/ATANU0023/Ai-factory
+cd software-factory
+pip install -e .[local,dev]
 ```
 
 ---
 
 ## 🛡️ Best Practices
-- **Skills**: Add a `.md` file to the `skills/` folder to tech the AI your specific coding style.
-- **Backups**: If something goes wrong, check the `.ai-factory-backups/` folder in your project root.
-- **Diffs**: Always review the `diff` before typing `yes` to apply changes.
+1. **Always Review Diffs**: The UI provides a full diff before writing—check it!
+2. **Use Skills**: Place `.md` files in the `skills/` folder to guide the AI's behavior.
+3. **Check Backups**: Revert any mistakes using `/undo` or by checking `.ai-factory-backups/`.
 
-**Developed with ❤️ and optimized for the terminal.**
+**Developed by ATANU PRAMANIK**
